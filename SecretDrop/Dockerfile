@@ -2,15 +2,14 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# Upgrade pip, setuptools, wheel, urllib3, and msgpack to clean vulnerable default packages
+RUN pip install --upgrade pip setuptools wheel urllib3 msgpack && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
 EXPOSE 5000
 
-CMD ["python", "-m", "flask", "--app", "run:create_app", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["python", "app.py"]
