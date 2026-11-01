@@ -1,0 +1,161 @@
+
+:root {
+    --ink: #172033;
+    --muted: #758096;
+    --accent: #4568f5;
+    --background: #f7f8fc;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--background);
+    color: var(--ink);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.navbar {
+    padding: 22px 0;
+    background: white;
+    border-bottom: 1px solid #e9ecf4;
+}
+
+.navbar-brand {
+    color: var(--ink);
+    font-size: 1.3rem;
+}
+
+.brand-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    margin-right: 6px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: white;
+}
+
+.navbar-text,
+.subtitle,
+.file-info,
+.footer-note {
+    color: var(--muted);
+}
+
+.hero {
+    max-width: 720px;
+    margin: 85px auto 50px;
+}
+
+.eyebrow {
+    margin-bottom: 18px;
+    color: var(--accent);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+h1 {
+    font-size: clamp(3rem, 8vw, 5rem);
+    font-weight: 750;
+    letter-spacing: -3px;
+    line-height: 1.05;
+}
+
+h1 span {
+    color: var(--accent);
+}
+
+.subtitle {
+    max-width: 470px;
+    margin: 22px auto 34px;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.upload-card {
+    padding: 12px;
+    background: white;
+    border: 1px solid #e7eaf2;
+    border-radius: 20px;
+    box-shadow: 0 18px 55px rgb(35 48 85 / 7%);
+}
+
+.upload-zone {
+    padding: 38px 16px;
+    text-align: center;
+    border: 2px dashed #d7dcef;
+    border-radius: 14px;
+}
+
+.upload-icon {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    margin: 0 auto 20px;
+    border-radius: 16px;
+    background: #edf1ff;
+    color: var(--accent);
+    font-size: 2rem;
+}
+
+.upload-zone h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.file-info {
+    font-size: 0.8rem;
+}
+
+.footer-note {
+    margin-top: 28px;
+    font-size: 0.85rem;
+}
+
+@media (max-width: 576px) {
+    .hero {
+        margin-top: 55px;
+    }
+
+    .navbar-text {
+        font-size: 0.8rem;
+    }
+
+    .upload-zone {
+        padding: 30px 10px;
+    }
+    
+    .upload-zone {
+        transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .upload-zone.drag-over {
+        border-color: var(--accent);
+        background-color: #f0f3ff;
+    }
+
+    .selected-file {
+        overflow-wrap: anywhere;
+        color: var(--ink);
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    #upload-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+    }
+
+    #upload-status {
+        font-size: 0.95rem;
+    }
+
+}
