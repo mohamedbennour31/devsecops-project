@@ -2,8 +2,8 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Upgrade pip and install target security fixes directly into default site-packages
-RUN python -m pip install --upgrade --no-cache-dir \
+# Uninstall default system wheels and force-reinstall clean versions
+RUN python -m pip install --upgrade --force-reinstall --no-cache-dir \
     pip \
     "setuptools>=78.1.1" \
     "urllib3>=2.8.0" \
