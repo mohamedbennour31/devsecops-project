@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   test:
     name: Python Tests
@@ -65,3 +70,4 @@ jobs:
         with:
           target: 'http://localhost:5000'
           fail_action: false
+          allow_issue_writing: false
