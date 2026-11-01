@@ -2,14 +2,16 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Step 1: Upgrade base system packages first
-RUN python -m pip install --upgrade pip setuptools urllib3 msgpack
+# Upgrade pip and install target security fixes directly into default site-packages
+RUN python -m pip install --upgrade --no-cache-dir \
+    pip \
+    "setuptools>=78.1.1" \
+    "urllib3>=2.8.0" \
+    "msgpack>=1.2.3"
 
-# Step 2: Copy requirements and install app dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install --no-cache-dir -r requirements.txt
 
-# Step 3: Copy app code
 COPY . .
 
 EXPOSE 5000
