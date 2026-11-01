@@ -26,5 +26,5 @@ jobs:
           pip install -r SecretDrop/requirements.txt
 
       - name: Run tests
-        run: |
-          python -m pytest -v SecretDrop/tests/
+        working-directory: SecretDrop
+        run: python -m pytest -v
