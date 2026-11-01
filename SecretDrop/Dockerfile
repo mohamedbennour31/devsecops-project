@@ -2,8 +2,13 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Uninstall default system wheels and force-reinstall clean versions
-RUN python -m pip install --upgrade --force-reinstall --no-cache-dir \
+# Upgrade system dependencies and python base packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-setuptools \
+    python3-urllib3 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m pip install --upgrade --no-cache-dir \
     pip \
     "setuptools>=78.1.1" \
     "urllib3>=2.8.0" \
