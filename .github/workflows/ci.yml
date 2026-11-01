@@ -24,7 +24,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r SecretDrop/requirements.txt
+          python -m pip install bandit
 
       - name: Run tests
         working-directory: SecretDrop
         run: python -m pytest -v
+
+      - name: Run Bandit SAST
+        working-directory: SecretDrop
+        run: bandit -r app/
