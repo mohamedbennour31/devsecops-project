@@ -1,4 +1,3 @@
-
 import os
 import secrets
 from pathlib import Path
@@ -27,3 +26,9 @@ def create_app(test_config=None):
     app.register_blueprint(main)
 
     return app
+
+
+app = create_app()
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
