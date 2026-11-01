@@ -1,53 +1,30 @@
-# DevSecOps Project — Secure CI/CD Pipeline (SecretDrop)
+SecretDrop — Secure CI/CD PipelineA DevSecOps CI/CD pipeline built with GitHub Actions for the SecretDrop Flask application. This pipeline automatically enforces static code analysis, secret detection, dependency scanning, container vulnerability management, and dynamic application security testing (DAST) on every push and pull request.
+Pipeline Architecture                
+                                 ┌───────────────────────────────────────────────────────────────┐
+                                 │                   GitHub Actions Pipeline                     │
+                                 ├───────────────┬───────────────┬───────────────┬───────────────┤
+[ Developer ] --(Push/PR)-->     │   1. SAST     │  2. Secrets   │    3. SCA     │ 4. Container  │
+                                 │   (Bandit)    │  (Gitleaks)   │  (Trivy FS)   │    (Trivy)    │
+                                 └───────┬───────┴───────┬───────┴───────┬───────┴───────┬───────┘
+                                         │               │               │               │
+                                         └───────────────┴───────┬───────┴───────────────┘
+                                                                 ▼
+                                                        [ Docker Build ]
+                                                                 │
+                                                                 ▼
+                                                        [ Start Container ]
+                                                                 │
+                                                                 ▼
+                                                        [ 5. DAST (OWASP ZAP) ]
+                                                                 │
+                                                                 ▼
+                                                        [ Quality Gate Passed ]
+Security Stages & Quality GatesThe pipeline runs sequentially inside .github/workflows/ci.yml and enforces strict quality gates before allowing code to merge:StageSecurity ToolScan TargetGate Policy / Threshold1. Unit TestingpytestTest suiteAll test cases must pass.2. SASTBanditPython source (app/)Fails build on High severity & High confidence findings (-ll -iii).3. Secret ScanningGitleaksRepository git historyZero tolerance; fails on any committed API keys, tokens, or credentials. Requires fetch-depth: 0.4. SCA (Dependencies)Trivy FSrequirements.txt / FilesystemFails on HIGH or CRITICAL vulnerability severity.5. Container SecurityTrivy ImageDocker Image (secretdrop:latest)Fails on HIGH or CRITICAL container OS or library vulnerabilities. Exemption exceptions defined in .trivyignore.6. DASTOWASP ZAPRunning App ([http://127.0.0.1:5000](http://127.0.0.1:5000))Baseline dynamic web scan; generates HTML, JSON, and Markdown vulnerability reports.Pipeline Execution FlowCheckout & Setup: Code is checked out with full git history (fetch-depth: 0) and Python environment is initialized.Test & Static Security: Unit tests (pytest), Bandit SAST analysis, and Gitleaks secret detection execute concurrently.Dependency Scanning: Trivy scans project dependencies for known CVEs.Container Build & Scan: The Flask web application is built into a local Docker image (secretdrop:latest) and scanned by Trivy Image scanner.Dynamic Security Scan: The Docker container is launched on 0.0.0.0:5000. OWASP ZAP runs an active baseline scan against the application endpoint.Artifact Archiving: ZAP security scan reports (report_html.html, report_json.json, report_md.md) are saved as GitHub Actions build artifacts.Security Policy & False-Positive ManagementZero-Trust Secret Rule: Unencrypted credentials or keys are strictly prohibited in code.Vulnerability Exceptions: Non-exploitable vulnerabilities or false positives (e.g., internal pip vendor dependencies) are documented and exempted using .trivyignore at the repository root.Local Development & TestingTo run application tests and container builds locally before pushing:Bash# Install dependencies & run unit tests
+pip install -r requirements.txt
+pytest
 
-## 1. Project Overview
-This project improves CI/CD pipeline security for the **SecretDrop** application by integrating automated security checks throughout the software development lifecycle. The goal is to detect vulnerabilities early, prevent security issues from reaching production, and enforce DevSecOps best practices.
+# Build local Docker image
+docker build -t secretdrop:latest .
 
-### Objectives
-* Implement automated security checks in a CI/CD pipeline.
-* Detect vulnerabilities in source code and dependencies.
-* Identify exposed secrets in git history and commits.
-* Scan Docker images for vulnerabilities.
-* Test the running application dynamically for security issues.
-* Configure strict security quality gates to block unsafe builds.
-
----
-
-## 2. Technologies and Tools
-* **GitHub Actions:** CI/CD automation pipeline.
-* **Bandit:** Static Application Security Testing (SAST) for Python.
-* **Gitleaks:** Automated secret detection.
-* **Trivy:** Filesystem (SCA) and Docker image security scanning.
-* **OWASP ZAP:** Baseline Dynamic Application Security Testing (DAST).
-* **Docker & pytest:** Containerization and automated unit testing.
-* **Pre-commit:** Local developer security checks.
-
----
-
-## 3. Project Workflow
-1. Developers push code or open a Pull Request on GitHub.
-2. GitHub Actions checks out code with full history (`fetch-depth: 0`).
-3. Automated unit tests (`pytest`) run and Python dependencies install.
-4. **SAST (Bandit)** scans source code; **Gitleaks** scans for exposed secrets.
-5. **Trivy (FS)** scans filesystem and `requirements.txt` dependencies.
-6. **Docker** builds the application image (`secretdrop:latest`).
-7. **Trivy (Image)** scans the container for OS/library vulnerabilities.
-8. The application container starts on port `5000`.
-9. **OWASP ZAP** executes a baseline DAST scan against `http://127.0.0.1:5000`.
-10. Scan reports are archived as build artifacts.
-
----
-
-## 4. Team Responsibilities
-* **Person A — CI/CD:** GitHub Actions workflow design, build automation, scanner integration, quality gate enforcement, and branch protection.
-* **Person B — Security & Application:** Application setup, local security tooling (pre-commit, Trivy, ZAP), test case validation, and report collation.
-
----
-
-## 5. Security Policy & Quality Gates
-The pipeline enforces strict automated gates:
-* **Secrets:** Zero tolerance; any detected API keys or credentials fail the build.
-* **SAST (Bandit):** Blocks on High severity / High confidence findings (`-ll -iii`).
-* **SCA & Image (Trivy):** Blocks on `HIGH` and `CRITICAL` vulnerabilities.
-* **False-Positive Handling:** Exemption rules are strictly tracked in `.trivyignore` (e.g., bypassing non-exploitable internal `pip` vendor metadata).
-
+# Run application container locally
+docker run -d -p 5000:5000 --name secretdrop-app secretdrop:latest
