@@ -71,3 +71,14 @@ jobs:
           target: 'http://localhost:5000'
           fail_action: false
           allow_issue_writing: false
+          artifact_name: ''
+
+      - name: Upload ZAP Scan Reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-baseline-report
+          path: |
+            report_html.html
+            report_md.md
+            report_json.json
