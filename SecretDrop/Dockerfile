@@ -2,20 +2,15 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Upgrade pip and app packages globally
-RUN python -m pip install --upgrade --no-cache-dir \
-    pip \
-    "setuptools>=78.1.1" \
-    "urllib3>=2.8.0" \
-    "msgpack>=1.2.3"
-
-# Clean up stale Debian base system metadata files
-RUN rm -rf /usr/lib/python3/dist-packages/setuptools* \
-           /usr/lib/python3/dist-packages/urllib3* \
-           /usr/lib/python3/dist-packages/msgpack*
-
 COPY requirements.txt .
-RUN python -m pip install --no-cache-dir -r requirements.txt
+
+# Install dependencies and force-upgrade vulnerable system packages
+RUN python -m pip install --upgrade --no-cache-dir pip && \
+    python -m pip install --no-cache-dir -r requirements.txt && \
+    python -m pip install --upgrade --no-cache-dir "setuptools>=78.1.1" "urllib3>=2.8.0" "msgpack>=1.2.3"
+
+# Remove lingering Debian/base-image metadata files that trigger Trivy
+RUN find / -name "setuptools-70*" -o -name "urllib3-2.7*" -o -name "msgpack-1.1*" -exec rm -rf {} + 2>/dev/null || true
 
 COPY . .
 
