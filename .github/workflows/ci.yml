@@ -6,14 +6,13 @@ on:
   pull_request:
     branches: [main]
 
-
 permissions:
   contents: read
   issues: write
 
 jobs:
   test:
-    name: Python Tests
+    name: Python Tests & Security Gate
     runs-on: ubuntu-latest
 
     steps:
@@ -31,35 +30,40 @@ jobs:
           pip install -r SecretDrop/requirements.txt
           python -m pip install bandit
 
-      - name: Run tests
+      - name: Run unit tests
         working-directory: SecretDrop
         run: python -m pytest -v
 
-      - name: Run Bandit SAST
+      - name: Run Bandit SAST Gate
         working-directory: SecretDrop
-        run: bandit -r app/
+        run: bandit -r app/ -ll -iii
+
       - name: Run Gitleaks Secret Scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run Trivy Filesystem Scan
+
+      - name: Run Trivy Filesystem Scan Gate
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
           severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
       - name: Build Docker image
         run: docker build -t secretdrop:latest SecretDrop/
 
-      - name: Run Trivy Image Scan
+      - name: Run Trivy Container Image Gate
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'secretdrop:latest'
           format: 'table'
-          exit-code: '0'
+          exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
+
       - name: Start SecretDrop container
         run: |
           docker run -d -p 5000:5000 --name secretdrop-app secretdrop:latest
