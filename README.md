@@ -6,25 +6,8 @@ A DevSecOps CI/CD pipeline built with GitHub Actions for the **SecretDrop** Flas
 
 ## Pipeline Architecture
            
-                                 ┌───────────────────────────────────────────────────────────────┐
-                                 │                   GitHub Actions Pipeline                     │
-                                 ├───────────────┬───────────────┬───────────────┬───────────────┤
-[ Developer ] --(Push/PR)-->     │   1. SAST     │  2. Secrets   │    3. SCA     │ 4. Container  │
-                                 │   (Bandit)    │  (Gitleaks)   │  (Trivy FS)   │    (Trivy)    │
-                                 └───────┬───────┴───────┬───────┴───────┬───────┴───────┬───────┘
-                                         │               │               │               │
-                                         └───────────────┴───────┬───────┴───────────────┘
-                                                                 ▼
-                                                        [ Docker Build ]
-                                                                 │
-                                                                 ▼
-                                                        [ Start Container ]
-                                                                 │
-                                                                 ▼
-                                                        [ 5. DAST (OWASP ZAP) ]
-                                                                 │
-                                                                 ▼
-                                                        [ Quality Gate Passed ]
+         [ Code Commit ] ➔ [ SAST & Secrets ] ➔ [ SCA Scan ] ➔ [ Docker Build ] ➔ [ Container Scan ] ➔ [ DAST (ZAP) ] ➔ [ Deploy ]
+
 ---
 
 ## Security Stages & Quality Gates
