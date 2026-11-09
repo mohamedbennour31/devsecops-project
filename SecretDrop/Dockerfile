@@ -1,21 +1,38 @@
-FROM python:3.13-slim
+FROM python:3.13-slim-trixie
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+# Update operating system packages
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
 COPY requirements.txt .
 
-# Install dependencies and update packages
-RUN python -m pip install --upgrade --no-cache-dir pip && \
-    python -m pip install --no-cache-dir -r requirements.txt && \
-    python -m pip install --upgrade --no-cache-dir "setuptools>=78.1.1" "urllib3>=2.8.0" "msgpack>=1.2.3"
+RUN pip install --no-cache-dir --upgrade pip setuptools && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Delete stale Debian system package directories that trigger Trivy
-RUN rm -rf /usr/lib/python3/dist-packages/setuptools* \
-           /usr/lib/python3/dist-packages/urllib3* \
-           /usr/lib/python3/dist-packages/msgpack*
-
+# Copy application
 COPY . .
 
+# Create non-root application user
+RUN mkdir -p /app/uploads && \
+    groupadd -r appuser && \
+    useradd -r -g appuser appuser && \
+    chown -R appuser:appuser /app
+
+# Run as non-root
+USER appuser
+
 EXPOSE 5000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3)" || exit 1
 
 CMD ["python", "run.py"]

@@ -4,8 +4,6 @@ import time
 import secrets
 from pathlib import Path
 from urllib.parse import urlparse
-from flask import current_app
-
 
 from flask import (
     Blueprint,
@@ -23,6 +21,10 @@ from werkzeug.utils import secure_filename
 
 main = Blueprint("main", __name__)
 
+@main.route("/health", methods=["GET"])
+def health():
+    return {"status": "healthy"}, 200
+
 ALLOWED_EXTENSIONS = {
     "pdf", "doc", "docx", "txt", "csv",
     "xls", "xlsx", "ppt", "pptx",
@@ -30,7 +32,6 @@ ALLOWED_EXTENSIONS = {
 }
 
 FILE_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{20,30}\Z")
-
 
 def allowed_file(filename):
     return (
@@ -42,12 +43,7 @@ def cleanup_expired_files():
     upload_dir = Path(current_app.config["UPLOAD_FOLDER"])
 
     # Production: expire files after 24 hours
-    #expiration_seconds = 24 * 60 * 60
-    expiration_seconds = 10
-    # TEST ONLY: expire files after 1 minute
-    # Uncomment the next line for testing and comment out the line above.
-    # expiration_seconds = 60
-
+    expiration_seconds = 24 * 60 * 60
     now = time.time()
 
     for path in upload_dir.iterdir():
@@ -145,13 +141,14 @@ def share_file(file_id):
     if stored_file is None:
         abort(404)
 
+    share_url = (
+        f"{current_app.config['PUBLIC_BASE_URL'].rstrip('/')}"
+        f"{url_for('main.share_file', file_id=file_id)}"
+    )
+
     return render_template(
         "index.html",
-        share_url=url_for(
-            "main.share_file",
-            file_id=file_id,
-            _external=True,
-        ),
+        share_url=share_url,
         file_id=file_id,
     )
 
