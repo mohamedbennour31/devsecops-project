@@ -3,6 +3,8 @@ services:
   app:
     build: .
     container_name: secretdrop-app
+    env_file:
+      - .env
     environment:
       SESSION_COOKIE_SECURE: "true"
       PUBLIC_BASE_URL: "https://secret-drop"
