@@ -4,12 +4,14 @@ from run import create_app
 
 @pytest.fixture
 def client(tmp_path):
-    app = create_app({
-        "TESTING": True,
-        "WTF_CSRF_ENABLED": True,
-        "UPLOAD_FOLDER": str(tmp_path),
-        "SECRET_KEY": "test-secret",
-    })
+    app = create_app(
+        {
+            "TESTING": True,
+            "WTF_CSRF_ENABLED": True,
+            "UPLOAD_FOLDER": str(tmp_path),
+            "SECRET_KEY": "test-secret",
+        }
+    )
 
     with app.test_client() as client:
         yield client
@@ -37,7 +39,6 @@ def test_upload_rejects_missing_csrf_token(client):
 
 def test_download_from_link_rejects_missing_csrf_token(client):
     response = client.post(
-        "/download-from-link",
-        data={"share_url": "http://127.0.0.1:5000/share/test"}
+        "/download-from-link", data={"share_url": "http://127.0.0.1:5000/share/test"}
     )
     assert response.status_code == 400

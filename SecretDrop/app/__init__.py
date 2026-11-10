@@ -1,4 +1,3 @@
-
 import os
 import secrets
 from pathlib import Path
@@ -24,6 +23,7 @@ def create_app(test_config=None):
     )
 
     from app.routes import main
+
     app.register_blueprint(main)
 
     return app
