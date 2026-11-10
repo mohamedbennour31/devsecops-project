@@ -21,7 +21,7 @@ jobs:
   type: passiveScan-wait
 - parameters:
     format: Long
-    summaryFile: /home/zap/zap_out.json
+    summaryFile: /zap/wrk/zap_out.json
   rules: []
   type: outputSummary
 - parameters:
