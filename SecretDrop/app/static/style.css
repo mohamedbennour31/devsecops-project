@@ -6,6 +6,10 @@
     --background: #f7f8fc;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     min-height: 100vh;
@@ -87,6 +91,13 @@ h1 span {
     text-align: center;
     border: 2px dashed #d7dcef;
     border-radius: 14px;
+    transition: border-color 0.2s ease,
+                background-color 0.2s ease;
+}
+
+.upload-zone.drag-over {
+    border-color: var(--accent);
+    background-color: #f0f3ff;
 }
 
 .upload-icon {
@@ -111,8 +122,29 @@ h1 span {
     border-color: var(--accent);
 }
 
+.btn-primary:hover {
+    background: #3454db;
+    border-color: #3454db;
+}
+
 .file-info {
     font-size: 0.8rem;
+}
+
+.selected-file {
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+#upload-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+#upload-status {
+    font-size: 0.95rem;
 }
 
 .footer-note {
@@ -133,29 +165,8 @@ h1 span {
         padding: 30px 10px;
     }
 
-    .upload-zone {
-        transition: border-color 0.2s ease, background-color 0.2s ease;
+    h1 {
+        letter-spacing: -2px;
     }
-
-    .upload-zone.drag-over {
-        border-color: var(--accent);
-        background-color: #f0f3ff;
-    }
-
-    .selected-file {
-        overflow-wrap: anywhere;
-        color: var(--ink);
-        font-size: 0.9rem;
-        font-weight: 600;
-    }
-
-    #upload-button:disabled {
-        cursor: not-allowed;
-        opacity: 0.55;
-    }
-
-    #upload-status {
-        font-size: 0.95rem;
-    }
-
 }
+
