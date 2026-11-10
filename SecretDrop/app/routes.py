@@ -1,7 +1,6 @@
-
 import re
-import time
 import secrets
+import time
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -21,23 +20,35 @@ from werkzeug.utils import secure_filename
 
 main = Blueprint("main", __name__)
 
+
 @main.route("/health", methods=["GET"])
 def health():
     return {"status": "healthy"}, 200
 
+
 ALLOWED_EXTENSIONS = {
-    "pdf", "doc", "docx", "txt", "csv",
-    "xls", "xlsx", "ppt", "pptx",
-    "png", "jpg", "jpeg", "gif", "webp",
+    "pdf",
+    "doc",
+    "docx",
+    "txt",
+    "csv",
+    "xls",
+    "xlsx",
+    "ppt",
+    "pptx",
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
 }
 
 FILE_ID_PATTERN = re.compile(r"[A-Za-z0-9_-]{20,30}\Z")
 
+
 def allowed_file(filename):
-    return (
-        "." in filename
-        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-    )
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 def cleanup_expired_files():
     upload_dir = Path(current_app.config["UPLOAD_FOLDER"])
@@ -53,13 +64,9 @@ def cleanup_expired_files():
         try:
             if now - path.stat().st_mtime >= expiration_seconds:
                 path.unlink()
-                current_app.logger.info(
-                    "Deleted expired file: %s", path.name
-                )
+                current_app.logger.info("Deleted expired file: %s", path.name)
         except OSError:
-            current_app.logger.exception(
-                "Could not remove expired file: %s", path.name
-            )
+            current_app.logger.exception("Could not remove expired file: %s", path.name)
 
 
 def find_uploaded_file(file_id):
@@ -71,13 +78,15 @@ def find_uploaded_file(file_id):
     upload_dir = Path(current_app.config["UPLOAD_FOLDER"])
 
     matches = [
-        path for path in upload_dir.iterdir()
+        path
+        for path in upload_dir.iterdir()
         if path.is_file()
         and path.stem == file_id
         and path.suffix.lower().lstrip(".") in ALLOWED_EXTENSIONS
     ]
 
     return matches[0] if len(matches) == 1 else None
+
 
 @main.route("/")
 def index():

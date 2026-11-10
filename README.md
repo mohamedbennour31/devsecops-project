@@ -5,7 +5,7 @@ A DevSecOps CI/CD pipeline built with GitHub Actions for the **SecretDrop** Flas
 ---
 
 ## Pipeline Architecture
-           
+
          [ Code Commit ] ➔ [ SAST & Secrets ] ➔ [ SCA Scan ] ➔ [ Docker Build ] ➔ [ Container Scan ] ➔ [ DAST (ZAP) ] ➔ [ Deploy ]
 
 ---
