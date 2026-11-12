@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  issues: write
+  security-events: write
 
 jobs:
   test:
@@ -40,18 +40,30 @@ jobs:
         working-directory: SecretDrop
         run: bandit -r app/ -ll -iii
 
-      - name: Run Gitleaks Secret Scan
-        uses: gitleaks/gitleaks-action@dcedce43c6f43de0b836d1fe38946645c9c638dc #v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Gitleaks SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gitleaks-results.sarif
 
       - name: Run Trivy Filesystem Scan Gate
-        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec #master
+        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
         with:
           scan-type: 'fs'
           scan-ref: 'SecretDrop'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
+          format: 'sarif'
+          output: 'trivy-fs-results.sarif'
+
+      - name: Upload Trivy Filesystem SARIF
+        if: always() && hashFiles('trivy-fs-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-fs-results.sarif'
+          category: trivy-filesystem
+
+
       - name: Verify Python base image digest
         run: |
           grep -E '^FROM python:3\.13-slim-trixie@sha256:[a-f0-9]{64}$' SecretDrop/Dockerfile
@@ -59,17 +71,40 @@ jobs:
       - name: Build Docker image
         run: docker build --pull -t secretdrop:latest SecretDrop/
 
-      - name: Run Trivy Container Image Gate
-        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec #master
+      - name: Generate Trivy SBOM
+        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
         with:
           image-ref: 'secretdrop:latest'
-          format: 'table'
+          format: 'cyclonedx'
+          output: 'sbom.json'
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: container-sbom
+          path: sbom.json
+          retention-days: 30
+
+      - name: Run Trivy Container Image Gate
+        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
+        with:
+          image-ref: 'secretdrop:latest'
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'library'
           scanners: 'vuln'
           severity: 'CRITICAL,HIGH'
           trivyignores: '.trivyignore'
+
+      - name: Upload Trivy Container SARIF
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+          category: trivy-container
+
 
       - name: Start SecretDrop container
         run: |
@@ -93,3 +128,9 @@ jobs:
             report_html.html
             report_md.md
             report_json.json
+
+      - name: Upload Gitleaks SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: gitleaks-results.sarif
