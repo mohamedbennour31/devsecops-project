@@ -175,9 +175,11 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Signing image: $IMAGE_NAME@$DIGEST"
-          cosign sign --yes "$IMAGE_NAME@$DIGEST"
+          echo "Cosign version:"
+          cosign version
 
+          echo "Signing: $IMAGE_NAME@$DIGEST"
+          cosign sign --yes --verbose "$IMAGE_NAME@$DIGEST"
 
       - name: Check published Cosign signature
         if: github.event_name == 'push'
