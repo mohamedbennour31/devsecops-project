@@ -105,7 +105,9 @@ jobs:
 
       - name: Display deployment status
         if: always()
+        env:
+          IMAGE_REF: ${{ env.IMAGE_NAME }}@${{ env.IMAGE_DIGEST }}
         run: |
-          docker compose \
-            -f /home/server/devsecops-project/SecretDrop/docker-compose.yml \
-            ps
+          cd /home/server/devsecops-project/SecretDrop
+
+          docker compose ps
