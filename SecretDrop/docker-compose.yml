@@ -1,7 +1,7 @@
 
 services:
   app:
-    build: .
+    image: ${IMAGE_REF:?IMAGE_REF must contain a signed image digest}
     container_name: secretdrop-app
     env_file:
       - .env

@@ -19,6 +19,9 @@ jobs:
     name: Python Tests & Security Gate
     runs-on: ubuntu-latest
 
+    outputs:
+      image_digest: ${{ steps.image.outputs.digest }}
+
     env:
       IMAGE_NAME: hgfvjyf/secretdrop
       IMAGE_TAG: ${{ github.sha }}
@@ -210,7 +213,14 @@ jobs:
             report_json.json
           if-no-files-found: warn
 
-      # 20. Cleanup test container
-      - name: Cleanup
-        if: always()
-        run: docker rm -f secretdrop-app || true
+      # 20. Deploy
+  deploy:
+    name: Deploy SecretDrop to Production
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/security/docker-hardening'
+    uses: ./.github/workflows/cd.yml
+    with:
+      image_digest: ${{ needs.test.outputs.image_digest }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
