@@ -78,6 +78,7 @@ jobs:
       # 8. Build image locally
       - name: Build Docker image
         run: |
+          set -euo pipefail
           docker build --pull \
             -t secretdrop:latest \
             -t "$IMAGE_NAME:$IMAGE_TAG" \
@@ -139,6 +140,7 @@ jobs:
       - name: Push Docker image
         if: github.event_name == 'push'
         run: |
+          set -euo pipefail
           docker push "$IMAGE_NAME:$IMAGE_TAG" 2>&1 | tee /tmp/docker-push.log
 
       # 14. Capture immutable remote digest
@@ -146,6 +148,8 @@ jobs:
         if: github.event_name == 'push'
         id: image
         run: |
+          set -euo pipefail
+
           DIGEST=$(sed -nE \
             's/.*digest: (sha256:[a-f0-9]{64}).*/\1/p' \
             /tmp/docker-push.log | tail -n 1)
@@ -169,20 +173,25 @@ jobs:
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
         run: |
+          set -euo pipefail
+
           echo "Signing image: $IMAGE_NAME@$DIGEST"
           cosign sign --yes "$IMAGE_NAME@$DIGEST"
 
-      # 17. Verify image signature
+      # 17. Verify Cosign signature from either branch
       - name: Verify Cosign Signature
         if: github.event_name == 'push'
         env:
           DIGEST: ${{ steps.image.outputs.digest }}
         run: |
+          set -euo pipefail
+
           echo "Verifying image: $IMAGE_NAME@$DIGEST"
+          echo "Expected workflow branch: $GITHUB_REF_NAME"
 
           cosign verify "$IMAGE_NAME@$DIGEST" \
-            --certificate-identity-regexp \
-            "^https://github.com/${{ github.repository }}/.github/workflows/ci.yml@refs/heads/security/docker-hardening$" \
+            --certificate-identity \
+            "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${GITHUB_REF}" \
             --certificate-oidc-issuer \
             "https://token.actions.githubusercontent.com"
 
@@ -213,7 +222,7 @@ jobs:
             report_json.json
           if-no-files-found: warn
 
-      # 20. Deploy
+  # 20. Deploy
   deploy:
     name: Deploy SecretDrop to Production
     needs: test
