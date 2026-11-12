@@ -47,9 +47,11 @@ jobs:
 
       - name: Verify image signature
         run: |
+          set -euo pipefail
+
           cosign verify "$IMAGE_NAME@$IMAGE_DIGEST" \
             --certificate-identity-regexp \
-            "^https://github.com/mohamedbennour31/devsecops-project/.github/workflows/ci.yml@refs/heads/security/docker-hardening$" \
+            "^https://github.com/mohamedbennour31/devsecops-project/.github/workflows/ci.yml@refs/heads/(main|security/docker-hardening)$" \
             --certificate-oidc-issuer \
             "https://token.actions.githubusercontent.com"
 
