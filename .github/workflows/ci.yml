@@ -193,7 +193,6 @@ jobs:
 
           cosign tree "$IMAGE_NAME@$DIGEST"
 
-      # 17. Verify Cosign Signature
       - name: Verify Cosign Signature
         if: github.event_name == 'push'
         env:
@@ -201,11 +200,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Verifying image: $IMAGE_NAME@$DIGEST"
-          echo "Expected workflow branch: $GITHUB_REF_NAME"
-
           cosign verify \
-            --registry-referrers-mode=legacy \
             "$IMAGE_NAME@$DIGEST" \
             --certificate-identity \
             "https://github.com/${{ github.repository }}/.github/workflows/ci.yml@${GITHUB_REF}" \
