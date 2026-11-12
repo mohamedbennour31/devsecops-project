@@ -57,6 +57,19 @@ jobs:
       - name: Build Docker image
         run: docker build --pull -t secretdrop:latest SecretDrop/
 
+      - name: Generate Trivy SBOM
+        uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec #master
+        with:
+          image-ref: 'secretdrop:latest'
+          format: 'cyclonedx'
+          output: 'sbom.json'
+
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4
+        with:
+          name: container-sbom
+          path: sbom.json
+
       - name: Run Trivy Container Image Gate
         uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec #master
         with:
