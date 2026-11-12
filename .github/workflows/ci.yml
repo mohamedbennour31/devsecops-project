@@ -184,7 +184,6 @@ jobs:
             --registry-referrers-mode=legacy \
             "$IMAGE_NAME@$DIGEST"
 
-      # 16.1 Verify signature was published
       - name: Check published Cosign signature
         if: github.event_name == 'push'
         env:
@@ -192,8 +191,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          cosign download signature \
-            "$IMAGE_NAME@$DIGEST"
+          cosign tree "$IMAGE_NAME@$DIGEST"
 
       # 17. Verify Cosign Signature
       - name: Verify Cosign Signature
