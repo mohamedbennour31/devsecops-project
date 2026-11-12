@@ -23,7 +23,7 @@ jobs:
     runs-on: [self-hosted, linux, x64, production]
     timeout-minutes: 15
 
-    if: github.event_name == 'push' && github.ref == 'refs/heads/security/docker-hardening'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/security/docker-hardening')
 
     env:
       IMAGE_NAME: hgfvjyf/secretdrop

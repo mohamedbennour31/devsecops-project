@@ -217,7 +217,7 @@ jobs:
   deploy:
     name: Deploy SecretDrop to Production
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/security/docker-hardening'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/security/docker-hardening')
     uses: ./.github/workflows/cd.yml
     with:
       image_digest: ${{ needs.test.outputs.image_digest }}
