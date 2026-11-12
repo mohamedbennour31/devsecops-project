@@ -10,10 +10,10 @@ repos:
       - id: check-merge-conflict
       - id: detect-private-key
 
-  # Python linting
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.0
+
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.8.6
     hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
+      - id: bandit
+        args: ["-ll", "-iii"]
+        files: ^SecretDrop/app/
