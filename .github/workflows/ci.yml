@@ -178,6 +178,15 @@ jobs:
           echo "Signing image: $IMAGE_NAME@$DIGEST"
           cosign sign --yes "$IMAGE_NAME@$DIGEST"
 
+
+      - name: Check published Cosign signature
+        if: github.event_name == 'push'
+        env:
+          DIGEST: ${{ steps.image.outputs.digest }}
+        run: |
+          set -euo pipefail
+          cosign download signature "$IMAGE_NAME@$DIGEST"
+
       # 17. Verify Cosign signature from either branch
       - name: Verify Cosign Signature
         if: github.event_name == 'push'
