@@ -1,3 +1,4 @@
+
 name: CI Pipeline
 
 on:
@@ -17,12 +18,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 #v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 #v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.13"
 
@@ -36,47 +37,51 @@ jobs:
         working-directory: SecretDrop
         run: python -m pytest -v
 
+      # SAST
       - name: Run Bandit SAST Gate
         working-directory: SecretDrop
         run: bandit -r app/ -ll -iii
 
-      - name: Upload Gitleaks SARIF
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: gitleaks-results.sarif
+      # Secret scanning
+      - name: Run Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Filesystem and dependency scanning
       - name: Run Trivy Filesystem Scan Gate
         uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
         with:
-          scan-type: 'fs'
-          scan-ref: 'SecretDrop'
-          severity: 'HIGH,CRITICAL'
-          exit-code: '1'
-          format: 'sarif'
-          output: 'trivy-fs-results.sarif'
+          scan-type: fs
+          scan-ref: SecretDrop
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: sarif
+          output: trivy-fs-results.sarif
 
       - name: Upload Trivy Filesystem SARIF
         if: always() && hashFiles('trivy-fs-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-fs-results.sarif'
+          sarif_file: trivy-fs-results.sarif
           category: trivy-filesystem
 
-
+      # Docker hardening verification
       - name: Verify Python base image digest
         run: |
           grep -E '^FROM python:3\.13-slim-trixie@sha256:[a-f0-9]{64}$' SecretDrop/Dockerfile
 
+      # Container build
       - name: Build Docker image
         run: docker build --pull -t secretdrop:latest SecretDrop/
 
+      # Software Bill of Materials
       - name: Generate Trivy SBOM
         uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
         with:
-          image-ref: 'secretdrop:latest'
-          format: 'cyclonedx'
-          output: 'sbom.json'
+          image-ref: secretdrop:latest
+          format: cyclonedx
+          output: sbom.json
 
       - name: Upload SBOM Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -85,52 +90,72 @@ jobs:
           path: sbom.json
           retention-days: 30
 
+      # Container vulnerability scanning
       - name: Run Trivy Container Image Gate
         uses: aquasecurity/trivy-action@38b337fff0a2f984d5be173c99e3f633438167ec
         with:
-          image-ref: 'secretdrop:latest'
-          format: 'sarif'
-          output: 'trivy-image-results.sarif'
-          exit-code: '1'
+          image-ref: secretdrop:latest
+          format: sarif
+          output: trivy-image-results.sarif
+          exit-code: "1"
           ignore-unfixed: true
-          vuln-type: 'library'
-          scanners: 'vuln'
-          severity: 'CRITICAL,HIGH'
-          trivyignores: '.trivyignore'
+          vuln-type: library
+          scanners: vuln
+          severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
 
       - name: Upload Trivy Container SARIF
         if: always() && hashFiles('trivy-image-results.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: 'trivy-image-results.sarif'
+          sarif_file: trivy-image-results.sarif
           category: trivy-container
 
-
+      # Start application for DAST
       - name: Start SecretDrop container
         run: |
-          docker run -d --network=host --name secretdrop-app secretdrop:latest
-          sleep 10
+          docker run -d \
+            --network=host \
+            --name secretdrop-app \
+            secretdrop:latest
 
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:5000/ > /dev/null; then
+              echo "SecretDrop is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "SecretDrop failed to start"
+          docker logs secretdrop-app
+          exit 1
+
+      # Dynamic Application Security Testing
       - name: Run OWASP ZAP Scan
         run: |
-          chmod 777 ${{ github.workspace }}
           docker run --rm --network=host \
-            -v ${{ github.workspace }}:/zap/wrk/:rw \
+            -v "${{ github.workspace }}:/zap/wrk/:rw" \
             ghcr.io/zaproxy/zaproxy:stable@sha256:9624669db72f54d86c4b46a7064518bd9bf79d8c61a4c31befa9923489f328af \
-            zap-baseline.py -t http://127.0.0.1:5000 -J report_json.json -w report_md.md -r report_html.html -I
+            zap-baseline.py \
+            -t http://127.0.0.1:5000 \
+            -J /zap/wrk/report_json.json \
+            -w /zap/wrk/report_md.md \
+            -r /zap/wrk/report_html.html \
+            -I
 
       - name: Upload ZAP Scan Reports
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 #v4
         if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: zap-baseline-report
           path: |
             report_html.html
             report_md.md
             report_json.json
+          if-no-files-found: warn
 
-      - name: Upload Gitleaks SARIF
-        uses: github/codeql-action/upload-sarif@v3
+      # Cleanup
+      - name: Stop SecretDrop container
         if: always()
-        with:
-          sarif_file: gitleaks-results.sarif
+        run: docker rm -f secretdrop-app || true
