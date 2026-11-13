@@ -181,7 +181,6 @@ jobs:
           echo "Signing: $IMAGE_NAME@$DIGEST"
 
           cosign sign --yes \
-            --registry-referrers-mode=legacy \
             "$IMAGE_NAME@$DIGEST"
 
       - name: Check published Cosign signature
