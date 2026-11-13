@@ -17,3 +17,21 @@ repos:
       - id: bandit
         args: ["-ll", "-iii"]
         files: ^SecretDrop/app/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/semgrep/pre-commit
+    rev: v1.181.1
+    hooks:
+      - id: semgrep
+        args: [--config, auto]
+        types: [python]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff
+      - id: ruff-format
