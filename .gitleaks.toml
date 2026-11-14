@@ -1,0 +1,20 @@
+
+title = "DevSecOps Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+# Temporary rule to verify custom detection
+[[rules]]
+id = "devsecops-test-secret"
+description = "Detect synthetic test secrets"
+regex = '''MY_TEST_SECRET_[A-Z0-9]{20}'''
+secretGroup = 0
+entropy = 0
+
+[[rules]]
+id = "demo-exposed-key"
+description = "Demo exposed API key"
+regex = '''DEMO_API_KEY_[A-Z0-9]{24}'''
+secretGroup = 0
+entropy = 0
